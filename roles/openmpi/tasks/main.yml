@@ -1,0 +1,7 @@
+---
+- name: Install OpenMPI 
+  apt:
+    update_cache: yes
+    pkg:
+      - libopenmpi-dev
+      - openmpi-bin

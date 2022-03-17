@@ -1,0 +1,9 @@
+---
+- name: Install amuse-framework globally
+  pip:
+    name: amuse-framework
+    umask: "0022"
+  become: True
+    #~ virtualenv: /home/vagrant/env
+    #~ virtualenv_site_packages: yes
+    #~ state: forcereinstall

@@ -1,0 +1,33 @@
+- name: Install and configure AMUSE
+  hosts:
+    - all
+    - localhost
+  gather_facts: false
+  tasks:
+    - name: Wait for system to become reachable
+      wait_for_connection:
+        timeout: 300
+
+    - name: Gather facts for first time
+      setup:
+
+    - name: include role build_essentials
+      include_role:
+        name: build_essentials
+
+    - name: include role AMUSE prerequisites
+      include_role:
+        name: amuse_prereq
+
+    - name: include role amuse-framework install
+      include_role:
+        name: amuse-framework
+
+    - name: Clean apt cache
+      apt:
+        autoclean: yes
+        autoremove: yes
+
+    - name: Debug
+      debug:
+        msg: The AMUSE (jupyter) plugin has completed
