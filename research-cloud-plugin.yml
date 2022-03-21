@@ -19,9 +19,13 @@
       include_role:
         name: amuse_prereq
 
-    - name: include role amuse-framework install
+    - name: include role amuse install
       include_role:
-        name: amuse-framework
+        name: amuse
+
+    - name: include role amuse-tests install
+      include_role:
+        name: amuse-tests
 
     - name: Clean apt cache
       apt:

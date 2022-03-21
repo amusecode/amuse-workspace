@@ -1,7 +1,7 @@
 ---
-- name: Install amuse-framework globally
+- name: Install amuse globally
   pip:
-    name: amuse-framework[MPI]
+    name: amuse[MPI]
     umask: "0022"
     extra_args:
   become: True
