@@ -1,0 +1,172 @@
+#https://gitlab.com/rsc-surf-nl/rsc-plugins/-/blob/master/ansible/application-jupyter/application-jupyter.yml
+- name: Install and configure Jupyter
+  hosts:
+    - all
+  gather_facts: false
+  tasks:
+    - name: Wait for system to become reachable
+      wait_for_connection:
+        timeout: 300
+
+    - name: Gather facts for first time
+      setup:
+
+    - name: Ubuntu
+      when: ansible_distribution == 'Ubuntu'
+      block:
+      - name: Install required packages
+        when: ansible_distribution_major_version == "18"
+        package:
+          name:
+          - apt-transport-https
+          - python
+          - python-setuptools
+          - python-pip
+          - python3
+          - python3-setuptools
+          - python3-pip
+          - jq
+          - curl
+          - nodejs
+          - npm
+          state: present
+
+      - name: Install required packages
+        when: ansible_distribution_major_version == "20"
+        package:
+          name:
+          - apt-transport-https
+          - python3
+          - python3-setuptools
+          - python3-pip
+          - jq
+          - curl
+          - nodejs
+          - npm
+          state: present
+
+      #~ - name: Copy nodejs installer
+        #~ copy:
+          #~ src: files/nodejs-installer.sh
+          #~ dest: /tmp/nodejs-installer.sh
+          #~ mode: 0755
+
+      #~ - name: Execute nodejs ppa installer
+        #~ command: /tmp/nodejs-installer.sh
+
+      #~ - name: Remove nodejs ppa installer
+        #~ file:
+          #~ path: /tmp/nodejs-installer.sh
+          #~ state: absent
+
+      #~ - name: Install NodeJS
+        #~ apt:
+          #~ name: "{{ packages }}"
+          #~ allow_unauthenticated: yes
+        #~ vars:
+          #~ packages:
+          #~ - nodejs
+
+      - name: Ensure python 3 packages for Jupyter are installed
+        pip:
+          name: "{{ packages }}"
+          executable: pip3
+        vars:
+          packages:
+          - jupyterlab  #==3.0.11
+          - jupyterhub  #==1.3.0
+          - virtualenv  #==20.4.3
+          - jupyterlab-git  #==0.30.0b3
+
+      - name: Ensure configurable-http-proxy is installed
+        npm:
+          global: yes
+          name: configurable-http-proxy
+#          version: '4.3.2'
+
+      - name: Ensure Jupyter configuration directory exists
+        file:
+          path: /etc/jupyterhub/
+          state: directory
+
+      - name: Ensure systemd directory exists
+        file:
+          path: /usr/lib/systemd/system
+          state: directory
+
+      - name: Create nginx location block
+        copy:
+          dest: /etc/nginx/app-location-conf.d/jupyterhub.conf
+          mode: 0644
+          content: |
+            location / {
+                proxy_pass http://127.0.0.1:8000;
+                proxy_redirect http://localhost:8000/ $scheme://$host/;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header Host $host;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection $connection_upgrade;
+                client_max_body_size 10G;
+            }
+
+      - name: Restart nginx
+        service:
+          name: nginx
+          state: restarted
+
+      - name: Ensure jupyter configuration is in place
+        copy:
+          dest: /etc/jupyterhub/jupyterhub_config.py
+          content: |
+            c.Spawner.default_url = '/lab?reset'
+            c.Spawner.notebook_dir = '~'
+            c.Authenticator.admin_users = {'{{ ssh_user | default('vagrant', true) }}'}
+            c.Authenticator.delete_invalid_users = True
+
+            c.JupyterHub.port = 8000
+
+            c.JupyterHub.cleanup_servers = False
+            c.JupyterHub.cleanup_proxy = False
+                        
+            c.JupyterHub.template_vars = {'announcement_login': 'Welcome to the AMUSE workspace'}
+
+
+      - name: Ensure jupyter systemd config is in place
+        copy:
+          dest: /usr/lib/systemd/system/jupyterhub.service
+          content: |
+            [Unit]
+            Description=Jypyter Hub daemon
+            After=network.target
+
+            [Service]
+            Type=simple
+            ExecStart=/usr/local/bin/jupyterhub -f /etc/jupyterhub/jupyterhub_config.py
+            Restart=on-failure
+            RestartSec=42s
+
+            [Install]
+            WantedBy=multi-user.target
+
+      - name: Upgrade nbdime
+        pip:
+          name: nbdime
+          extra_args: --upgrade
+
+      - name: Reload jupyterhub service
+        systemd:
+          state: restarted
+          daemon_reload: yes
+          name: jupyterhub
+
+      - name: Ensure Jupyterhub is started
+        register: start_jupyterhub
+        service:
+          name: jupyterhub
+          state: restarted
+          enabled: yes
+
+      - debug:
+          msg: 'service_url: {"url": "https://{{ ansible_host }}", "tag": "web", "description": "Jupyter"}'
+        when: (start_jupyterhub is succeeded)

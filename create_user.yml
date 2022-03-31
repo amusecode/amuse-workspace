@@ -1,0 +1,23 @@
+---
+- name: Create a User
+  hosts: all
+  vars:
+    user_username: amuse
+    user_password: amusepw
+    user_passfile: ./password.hash
+  tasks:
+    - name: Generate User Password file
+      shell: python3 ./password_hasher.py {{ user_password }} > {{ user_passfile }}
+      args:
+        creates: "{{ user_passfile }}"
+      delegate_to: localhost
+
+    - name: Ensure User is Present
+      become: true
+      user:
+        name: "{{ user_username }}"
+        password: "{{ lookup('file', user_passfile) }}" 
+        group: users 
+        generate_ssh_key: yes
+        shell: "/bin/bash"
+        state: present

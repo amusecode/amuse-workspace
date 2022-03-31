@@ -10,6 +10,9 @@ Vagrant.configure("2") do |config|
   # boxes at https://vagrantcloud.com/search.
   config.vm.box = "generic/ubuntu2004"
 
+  # forward port; host can access guest web server at port 8000
+  config.vm.network "forwarded_port", guest: 8000, host: 8000, host_ip: "127.0.0.1"
+
   # Share an additional folder to the guest VM. The first argument is
   # the path on the host to the actual folder. The second argument is
   # the path on the guest to mount the folder. And the optional third
@@ -20,12 +23,31 @@ Vagrant.configure("2") do |config|
       v.memory = 2048
       v.cpus   = 1
   end
+
+  # allow password login
+  config.vm.provision "shell", inline: <<-SHELL
+     sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config    
+     systemctl restart sshd.service
+  SHELL
+
+  # create test user
+  config.vm.provision "ansible_local" do |ansible|
+    ansible.playbook = "create_user.yml"
+  end
   
+  # pre-provision things available at the RSC
   config.vm.provision "ansible_local" do |ansible|
     ansible.playbook = "vagrant-provision.yml"
     ansible.become = true
   end
 
+  # Provision the SRC plugin
+  config.vm.provision "ansible_local" do |ansible|
+    ansible.playbook = "application-jupyter.yml"
+    ansible.become=true
+  end
+
+  # this is our plugin
   config.vm.provision "ansible_local" do |ansible|
     ansible.playbook = "research-cloud-plugin.yml"
     ansible.become = true
