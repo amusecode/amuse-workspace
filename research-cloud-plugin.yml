@@ -35,6 +35,14 @@
           rmaps_base_oversubscribe = 1
           rmaps_base_inherit = 1
 
+# better fix .amusrc for each user
+    - name: set some things in amuserc
+      community.general.ini_file:
+        path: /usr/local/lib/python3.8/dist-packages/amuse/amuserc
+        section: channel
+        option: polling_interval_in_milliseconds
+        value: 1
+
     - name: Clean apt cache
       apt:
         autoclean: yes
