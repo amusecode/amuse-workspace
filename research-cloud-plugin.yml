@@ -27,6 +27,14 @@
       include_role:
         name: amuse-tests
 
+    - name: configure openmpi for oversubscribe
+      blockinfile:
+        path: /etc/openmpi/openmpi-mca-params.conf
+        insertafter: EOF
+        block: |      
+          rmaps_base_oversubscribe = 1
+          rmaps_base_inherit = 1
+
     - name: Clean apt cache
       apt:
         autoclean: yes
