@@ -2,6 +2,7 @@
 - name: Install and configure Jupyter
   hosts:
     - all
+    - localhost
   gather_facts: false
   tasks:
     - name: Wait for system to become reachable
@@ -15,24 +16,6 @@
       when: ansible_distribution == 'Ubuntu'
       block:
       - name: Install required packages
-        when: ansible_distribution_major_version == "18"
-        package:
-          name:
-          - apt-transport-https
-          - python
-          - python-setuptools
-          - python-pip
-          - python3
-          - python3-setuptools
-          - python3-pip
-          - jq
-          - curl
-          - nodejs
-          - npm
-          state: present
-
-      - name: Install required packages
-        when: ansible_distribution_major_version == "20"
         package:
           name:
           - apt-transport-https
@@ -44,28 +27,6 @@
           - nodejs
           - npm
           state: present
-
-      #~ - name: Copy nodejs installer
-        #~ copy:
-          #~ src: files/nodejs-installer.sh
-          #~ dest: /tmp/nodejs-installer.sh
-          #~ mode: 0755
-
-      #~ - name: Execute nodejs ppa installer
-        #~ command: /tmp/nodejs-installer.sh
-
-      #~ - name: Remove nodejs ppa installer
-        #~ file:
-          #~ path: /tmp/nodejs-installer.sh
-          #~ state: absent
-
-      #~ - name: Install NodeJS
-        #~ apt:
-          #~ name: "{{ packages }}"
-          #~ allow_unauthenticated: yes
-        #~ vars:
-          #~ packages:
-          #~ - nodejs
 
       - name: Ensure python 3 packages for Jupyter are installed
         pip:
