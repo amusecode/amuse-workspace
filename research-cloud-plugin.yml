@@ -30,7 +30,7 @@
     - name: configure openmpi for oversubscribe
       blockinfile:
         path: /etc/openmpi/openmpi-mca-params.conf
-        insertafter: EOF
+        marker: "\n# {mark} ansible managed \n"
         block: |      
           rmaps_base_oversubscribe = 1
           rmaps_base_inherit = 1
