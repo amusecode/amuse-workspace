@@ -37,7 +37,7 @@
 
 # better fix .amusrc for each user
     - name: set some things in amuserc
-      community.general.ini_file:
+      ini_file:
         path: /usr/local/lib/python3.8/dist-packages/amuse/amuserc
         section: channel
         option: polling_interval_in_milliseconds
