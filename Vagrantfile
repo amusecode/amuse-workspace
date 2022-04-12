@@ -51,6 +51,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision "ansible_local" do |ansible|
     ansible.playbook = "research-cloud-plugin.yml"
     ansible.become = true
+    #ansible.extra_vars= { amuse_devel_install: true }
   end
 
 end

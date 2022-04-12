@@ -3,7 +3,7 @@
   hosts: all
   vars:
     user_username: amuse
-    user_password: amusepw
+    user_password: amuse
     user_passfile: ./password.hash
   tasks:
     - name: Generate User Password file

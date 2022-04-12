@@ -22,10 +22,17 @@
     - name: include role amuse install
       include_role:
         name: amuse
+      when: amuse_devel_install is undefined or not amuse_devel_install
 
     - name: include role amuse-tests install
       include_role:
         name: amuse-tests
+      when: amuse_devel_install is undefined or not amuse_devel_install
+
+    - name: include role amuse-dev if amuse_devel_install
+      include_role:
+        name: amuse-dev
+      when: amuse_devel_install is defined and amuse_devel_install
 
     - name: configure openmpi for oversubscribe
       blockinfile:

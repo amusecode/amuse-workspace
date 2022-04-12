@@ -1,0 +1,23 @@
+---
+# tasks file for amuse-dev
+- name: clone main of a AMUSE
+  ansible.builtin.git:
+    repo: https://github.com/amusecode/amuse.git
+    dest: /src/amuse
+    single_branch: yes
+    version: main
+# unsatisfactory fix
+- name: fix Ubuntu pip install location
+  file:
+    src: /usr/local/lib/python3.8/dist-packages
+    dest: /usr/local/lib/python3.8/site-packages
+    state: link
+  become: True
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_version == '20.04'
+
+- name: Install amuse-devel globally
+  pip:
+    name: /src/amuse[MPI]
+    umask: "0022"
+    extra_args: "--prefix=/usr/local -e"
+  become: True
