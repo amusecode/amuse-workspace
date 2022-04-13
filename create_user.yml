@@ -1,14 +1,11 @@
 ---
-- name: Create a User
-  hosts: all
-  tasks:
-    - name: add extra users 
-      become: true
-      user:
-        name: "{{ item[0] }}"
-        password: "{{ item[1] | password_hash('sha512') }}" 
-        group: users 
-        generate_ssh_key: yes
-        shell: "/bin/bash"
-        state: present
-      loop: "{{ list_of_users }}"
+- name: add extra users 
+  become: true
+  user:
+    name: "{{ item[0] }}"
+    password: "{{ item[1] | password_hash('sha512') }}" 
+    group: users 
+    generate_ssh_key: yes
+    shell: "/bin/bash"
+    state: present
+  loop: "{{ list_of_users }}"

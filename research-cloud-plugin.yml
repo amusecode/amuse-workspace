@@ -55,6 +55,10 @@
         autoclean: yes
         autoremove: yes
 
+    - name: optionally add users from list of users
+      include_tasks: create_user.yml
+      when: list_of_users is defined
+
     - name: Debug
       debug:
         msg: The AMUSE (jupyter) plugin has completed
